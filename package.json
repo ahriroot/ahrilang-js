@@ -1,0 +1,18 @@
+{
+    "name": "ahrilang-js",
+    "version": "0.1.0",
+    "main": "dist/lib.js",
+    "module": "src/lib.ts",
+    "types": "src/types/lib.d.ts",
+    "license": "MIT",
+    "scripts": {
+        "index": "bun run ./src/index.ts",
+        "dev": "bun run --watch ./build.ts",
+        "build": "bun run ./build.ts",
+        "test": "bun test"
+    },
+    "devDependencies": {
+        "@types/bun": "^1.1.1",
+        "bun": "^1.1.8"
+    }
+}

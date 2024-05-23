@@ -1,0 +1,10 @@
+async fn add(a, b) {
+    return a / b
+}
+
+async fn call(a, b) {
+    return await add(a, b)
+}
+res = call(1, 2)
+result = coroutine(res)
+print(result)
