@@ -376,6 +376,7 @@ class Compiler {
                 this.make_instruction(
                     new Instruction(InstType.StoreName, index),
                 )
+                break
             default:
                 break
         }

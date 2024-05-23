@@ -253,6 +253,10 @@ Version ${VERSION}`
             return
         }
 
+        if (this.script !== null) {
+            run(this.script, this.args)
+        }
+
         if (this.commands !== null) {
             this.commands.run()
         }

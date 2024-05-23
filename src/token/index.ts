@@ -41,6 +41,11 @@ class Lexer {
                 break
             case TokenType.String:
                 break
+            case TokenType.Boolean:
+                break
+            case TokenType.Not:
+                token.metadata.precedence = Precedence.Prefix
+                break
             case TokenType.Plus:
                 token.metadata.precedence = Precedence.Term
                 break
@@ -54,6 +59,8 @@ class Lexer {
                 token.metadata.precedence = Precedence.Factor
                 break
             case TokenType.Power:
+            case TokenType.LeftShift:
+            case TokenType.RightShift:
                 token.metadata.precedence = Precedence.Power
                 break
             case TokenType.LeftParen:
@@ -69,6 +76,11 @@ class Lexer {
                 token.metadata.expr = ExprType.Infix
                 break
             case TokenType.Equal:
+            case TokenType.Greater:
+            case TokenType.GreaterEqual:
+            case TokenType.Less:
+            case TokenType.LessEqual:
+            case TokenType.NotEqual:
                 token.metadata.precedence = Precedence.Compare
                 break
             case TokenType.Dot:
@@ -118,6 +130,11 @@ class Lexer {
                         if (t) {
                             return t
                         }
+                    } else if (c == '_') {
+                        t = this.handle_underscore()
+                        if (t) {
+                            return t
+                        }
                     } else if (c == '(' || c == ')' || c == '{' || c == '}') {
                         t = this.handle_group_block(c)
                         if (t) {
@@ -164,10 +181,16 @@ class Lexer {
                         if (t) {
                             return t
                         }
+                    } else if (c == '!') {
+                        t = this.handle_not()
+                        if (t) {
+                            return t
+                        }
                     } else if (c == '\r') {
                     } else {
                         throw new ErrorSyntax('unexpected character')
                     }
+                    break
             }
         }
 
@@ -311,6 +334,35 @@ class Lexer {
         return Token.new_token([this.line, this.column], TokenType.Integer, c)
     }
 
+    handle_underscore(): Token | void {
+        switch (this.current.token_type) {
+            case TokenType.Void:
+                this.current = this.new_underscore()
+                break
+            case TokenType.Identifier:
+                this.current.content += '_'
+                break
+            case TokenType.SlComment:
+            case TokenType.MlComment:
+                this.current.content += '_'
+                break
+            case TokenType.MlString:
+            case TokenType.String:
+                this.current.content += '_'
+                break
+            default:
+                return this.make_token(this.new_underscore())
+        }
+    }
+
+    new_underscore(): Token {
+        return Token.new_token(
+            [this.line, this.column],
+            TokenType.Identifier,
+            '_',
+        )
+    }
+
     handle_group_block(c: string): Token | void {
         switch (this.current.token_type) {
             case TokenType.Void:
@@ -375,6 +427,7 @@ class Lexer {
                 } else {
                     return this.make_token(this.new_operator(c))
                 }
+                break
             default:
                 return this.make_token(this.new_operator(c))
         }
@@ -479,6 +532,7 @@ class Lexer {
                 break
             case TokenType.MlString:
                 this.current.content += c
+                break
             case TokenType.String:
                 return this.make_token(Token.void())
             default:
@@ -503,6 +557,7 @@ class Lexer {
                 return this.make_token(Token.void())
             case TokenType.String:
                 this.current.content += c
+                break
             default:
                 return this.make_token(this.new_mlstring())
         }
@@ -543,6 +598,28 @@ class Lexer {
 
     new_dot(): Token {
         return Token.new_token([this.line, this.column], TokenType.Dot, '.')
+    }
+
+    handle_not(): Token | void {
+        switch (this.current.token_type) {
+            case TokenType.Void:
+                this.current = this.new_not()
+                break
+            case TokenType.SlComment:
+            case TokenType.MlComment:
+                this.current.content += '!'
+                break
+            case TokenType.MlString:
+            case TokenType.String:
+                this.current.content += '!'
+                break
+            default:
+                return this.make_token(this.new_not())
+        }
+    }
+
+    new_not(): Token {
+        return Token.new_token([this.line, this.column], TokenType.Not, '!')
     }
 }
 

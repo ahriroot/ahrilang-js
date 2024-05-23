@@ -28,22 +28,31 @@ enum TokenType {
     String, // xxxxxxx
     Boolean, // true, false
 
+    Not, // !
     Plus, // +
     Minus, // -
     Multiply, // *
     Divide, // /
     Mod, // %
+    LeftShift, // <<
+    RightShift, // >>
     Power, // **
 
     Comma, // ,
     Colon, // :
+
+    Equal, // ==
+    Greater, // >
+    GreaterEqual, // >=
+    Less, // <
+    LessEqual, // <=
+    NotEqual, // !=
 
     LeftParen, // (
     RightParen, // )
     LeftBrace, // {
     RightBrace, // }
     Assign, // =
-    Equal, // ==
     Dot, // .
 
     SlComment, // //

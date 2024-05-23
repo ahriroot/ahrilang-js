@@ -1,7 +1,6 @@
 import { InstType } from '../instruction'
 import {
     ErrorRuntime,
-    ErrorSyntax,
     ObjectBase,
     ObjectConsts,
     ObjectFrame,
