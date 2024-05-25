@@ -21,28 +21,24 @@ describe('Lexer', () => {
     })
 
     test('tokenizer', () => {
-        let code = `fn add(a, b) {
-            return a + b
+        let code = `a = 0
+
+        if a > 0 {
+            print(">")
+        } else if a < 0 {
+            print("<")
+        } else {
+            print("==")
         }
-
-        // add
-        res = add(1, 2)
-
-        /**
-         * comment
-         */
-        print(res)
-
-        "123"
-        \`123
-        456
-        \`
+        
+        print(1)
         `
         let tokenizer = new Lexer(code)
         let tokens: Token[] = []
         while (true) {
             let t = tokenizer.get_next_token()
             tokens.push(t)
+            console.log("Token", t.toString())
             if (t.token_type == TokenType.Eof) {
                 break
             }

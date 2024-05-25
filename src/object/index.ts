@@ -10,7 +10,10 @@ class Standard {
     }
 }
 
-type Function = (obj: ObjectBase, runtime?: Runtime) => ObjectBase | Promise<ObjectBase>
+type Function = (
+    obj: ObjectBase,
+    runtime?: Runtime,
+) => ObjectBase | Promise<ObjectBase>
 
 class StdFunction extends Standard {
     value: Function
@@ -59,6 +62,30 @@ class ObjectBase {
     }
 
     format(): string {
+        throw new Error('Method not implemented.')
+    }
+
+    equal(other: ObjectBase): ObjectBase {
+        throw new Error('Method not implemented.')
+    }
+
+    notEqual(other: ObjectBase): ObjectBase {
+        throw new Error('Method not implemented.')
+    }
+
+    greaterThan(other: ObjectBase): ObjectBase {
+        throw new Error('Method not implemented.')
+    }
+
+    greaterThanOrEqual(other: ObjectBase): ObjectBase {
+        throw new Error('Method not implemented.')
+    }
+
+    lessThan(other: ObjectBase): ObjectBase {
+        throw new Error('Method not implemented.')
+    }
+
+    lessThanOrEqual(other: ObjectBase): ObjectBase {
         throw new Error('Method not implemented.')
     }
 
@@ -319,7 +346,7 @@ class ObjectBase {
             case 'ObjectInstructions':
                 self = this as unknown as ObjectInstructions
                 return `Instructions([${self.value
-                    .map((v) => v.toJSON())
+                    .map((v) => v.toString())
                     .join(',')}])`
             case 'ObjectFrame':
                 self = this as unknown as ObjectFrame
@@ -361,6 +388,84 @@ class ObjectInteger extends ObjectBase {
     hash(): symbol {
         return Symbol.for(this.value.toString())
     }
+
+    equal(other: ObjectBase): ObjectBase {
+        let o
+        switch (other.type) {
+            case 'ObjectInteger':
+                o = other as unknown as ObjectInteger
+                return new ObjectBoolean(this.value === o.value)
+            case 'ObjectFloat':
+                o = other as unknown as ObjectFloat
+                return new ObjectBoolean(this.value === o.value)
+        }
+        throw new Error('Invalid operation')
+    }
+
+    notEqual(other: ObjectBase): ObjectBase {
+        let o
+        switch (other.type) {
+            case 'ObjectInteger':
+                o = other as unknown as ObjectInteger
+                return new ObjectBoolean(this.value !== o.value)
+            case 'ObjectFloat':
+                o = other as unknown as ObjectFloat
+                return new ObjectBoolean(this.value !== o.value)
+        }
+        throw new Error('Invalid operation')
+    }
+
+    greaterThan(other: ObjectBase): ObjectBase {
+        let o
+        switch (other.type) {
+            case 'ObjectInteger':
+                o = other as unknown as ObjectInteger
+                return new ObjectBoolean(this.value > o.value)
+            case 'ObjectFloat':
+                o = other as unknown as ObjectFloat
+                return new ObjectBoolean(this.value > o.value)
+        }
+        throw new Error('Invalid operation')
+    }
+
+    lessThan(other: ObjectBase): ObjectBase {
+        let o
+        switch (other.type) {
+            case 'ObjectInteger':
+                o = other as unknown as ObjectInteger
+                return new ObjectBoolean(this.value < o.value)
+            case 'ObjectFloat':
+                o = other as unknown as ObjectFloat
+                return new ObjectBoolean(this.value < o.value)
+        }
+        throw new Error('Invalid operation')
+    }
+
+    greaterThanOrEqual(other: ObjectBase): ObjectBase {
+        let o
+        switch (other.type) {
+            case 'ObjectInteger':
+                o = other as unknown as ObjectInteger
+                return new ObjectBoolean(this.value >= o.value)
+            case 'ObjectFloat':
+                o = other as unknown as ObjectFloat
+                return new ObjectBoolean(this.value >= o.value)
+        }
+        throw new Error('Invalid operation')
+    }
+
+    lessThanOrEqual(other: ObjectBase): ObjectBase {
+        let o
+        switch (other.type) {
+            case 'ObjectInteger':
+                o = other as unknown as ObjectInteger
+                return new ObjectBoolean(this.value <= o.value)
+            case 'ObjectFloat':
+                o = other as unknown as ObjectFloat
+                return new ObjectBoolean(this.value <= o.value)
+        }
+        throw new Error('Invalid operation')
+    }
 }
 
 class ObjectFloat extends ObjectBase {
@@ -382,6 +487,84 @@ class ObjectFloat extends ObjectBase {
 
     hash(): symbol {
         return Symbol.for(this.value.toString())
+    }
+
+    equal(other: ObjectBase): ObjectBase {
+        let o
+        switch (other.type) {
+            case 'ObjectInteger':
+                o = other as unknown as ObjectInteger
+                return new ObjectBoolean(this.value === o.value)
+            case 'ObjectFloat':
+                o = other as unknown as ObjectFloat
+                return new ObjectBoolean(this.value === o.value)
+        }
+        throw new Error('Invalid operation')
+    }
+
+    notEqual(other: ObjectBase): ObjectBase {
+        let o
+        switch (other.type) {
+            case 'ObjectInteger':
+                o = other as unknown as ObjectInteger
+                return new ObjectBoolean(this.value !== o.value)
+            case 'ObjectFloat':
+                o = other as unknown as ObjectFloat
+                return new ObjectBoolean(this.value !== o.value)
+        }
+        throw new Error('Invalid operation')
+    }
+
+    greaterThan(other: ObjectBase): ObjectBase {
+        let o
+        switch (other.type) {
+            case 'ObjectInteger':
+                o = other as unknown as ObjectInteger
+                return new ObjectBoolean(this.value > o.value)
+            case 'ObjectFloat':
+                o = other as unknown as ObjectFloat
+                return new ObjectBoolean(this.value > o.value)
+        }
+        throw new Error('Invalid operation')
+    }
+
+    lessThan(other: ObjectBase): ObjectBase {
+        let o
+        switch (other.type) {
+            case 'ObjectInteger':
+                o = other as unknown as ObjectInteger
+                return new ObjectBoolean(this.value < o.value)
+            case 'ObjectFloat':
+                o = other as unknown as ObjectFloat
+                return new ObjectBoolean(this.value < o.value)
+        }
+        throw new Error('Invalid operation')
+    }
+
+    greaterThanOrEqual(other: ObjectBase): ObjectBase {
+        let o
+        switch (other.type) {
+            case 'ObjectInteger':
+                o = other as unknown as ObjectInteger
+                return new ObjectBoolean(this.value >= o.value)
+            case 'ObjectFloat':
+                o = other as unknown as ObjectFloat
+                return new ObjectBoolean(this.value >= o.value)
+        }
+        throw new Error('Invalid operation')
+    }
+
+    lessThanOrEqual(other: ObjectBase): ObjectBase {
+        let o
+        switch (other.type) {
+            case 'ObjectInteger':
+                o = other as unknown as ObjectInteger
+                return new ObjectBoolean(this.value <= o.value)
+            case 'ObjectFloat':
+                o = other as unknown as ObjectFloat
+                return new ObjectBoolean(this.value <= o.value)
+        }
+        throw new Error('Invalid operation')
     }
 }
 
@@ -428,6 +611,26 @@ class ObjectBoolean extends ObjectBase {
 
     hash(): symbol {
         return Symbol.for(this.value.toString())
+    }
+
+    equal(other: ObjectBase): ObjectBase {
+        let o
+        switch (other.type) {
+            case 'ObjectBoolean':
+                o = other as unknown as ObjectBoolean
+                return new ObjectBoolean(this.value === o.value)
+        }
+        throw new Error('Invalid operation')
+    }
+
+    notEqual(other: ObjectBase): ObjectBase {
+        let o
+        switch (other.type) {
+            case 'ObjectBoolean':
+                o = other as unknown as ObjectBoolean
+                return new ObjectBoolean(this.value !== o.value)
+        }
+        throw new Error('Invalid operation')
     }
 }
 

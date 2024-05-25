@@ -186,6 +186,11 @@ class Lexer {
                         if (t) {
                             return t
                         }
+                    } else if (c == '>' || c == '<') {
+                        t = this.handle_compare(c)
+                        if (t) {
+                            return t
+                        }
                     } else if (c == '\r') {
                     } else {
                         throw new ErrorSyntax('unexpected character')
@@ -468,6 +473,18 @@ class Lexer {
                 this.current.content += '='
                 this.current.token_type = TokenType.Equal
                 break
+            case TokenType.Not:
+                this.current.content += '='
+                this.current.token_type = TokenType.NotEqual
+                break
+            case TokenType.Greater:
+                this.current.content += '='
+                this.current.token_type = TokenType.GreaterEqual
+                break
+            case TokenType.Less:
+                this.current.content += '='
+                this.current.token_type = TokenType.LessEqual
+                break
             default:
                 return this.make_token(this.new_assign())
         }
@@ -620,6 +637,54 @@ class Lexer {
 
     new_not(): Token {
         return Token.new_token([this.line, this.column], TokenType.Not, '!')
+    }
+
+    handle_compare(c: string): Token | void {
+        switch (this.current.token_type) {
+            case TokenType.Void:
+                this.current = this.new_compare(c)
+                break
+            case TokenType.SlComment:
+            case TokenType.MlComment:
+                this.current.content += c
+                break
+            case TokenType.MlString:
+            case TokenType.String:
+                this.current.content += c
+                break
+            case TokenType.Less:
+                if (c == '<') {
+                    this.current.content += c
+                    this.current.token_type = TokenType.LeftShift
+                } else {
+                    throw new ErrorSyntax('invalid compare operator')
+                }
+                break
+            case TokenType.Greater:
+                if (c == '>') {
+                    this.current.content += c
+                    this.current.token_type = TokenType.RightShift
+                } else {
+                    throw new ErrorSyntax('invalid compare operator')
+                }
+                break
+            default:
+                return this.make_token(this.new_compare(c))
+        }
+    }
+
+    new_compare(c: string): Token {
+        if (c == '<') {
+            return Token.new_token([this.line, this.column], TokenType.Less, c)
+        } else if (c == '>') {
+            return Token.new_token(
+                [this.line, this.column],
+                TokenType.Greater,
+                c,
+            )
+        } else {
+            return Token.new_token([this.line, this.column], TokenType.Void, c)
+        }
     }
 }
 

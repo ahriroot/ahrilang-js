@@ -13,6 +13,7 @@ import {
 import {
     ObjectArray,
     ObjectAsyncFrame,
+    ObjectBoolean,
     ObjectFuture,
     ObjectNull,
 } from '../object'
@@ -58,6 +59,7 @@ class AsyncFrame {
     }
 
     async run(args: ObjectBase | null): Promise<ObjectBase> {
+        console.log(this.instructions.value.map((x) => x.toString()))
         let instructions = this.instructions.value
         let a
         let b
@@ -222,6 +224,33 @@ class AsyncFrame {
                         throw new ErrorRuntime('await must be used for future')
                     }
                     break
+                case InstType.Compare:
+                    console.log('Compare', this.locals)
+                    b = this.stack.pop() as ObjectBase
+                    a = this.stack.pop() as ObjectBase
+                    if (index == 0) {
+                        this.stack.push(a.equal(b))
+                    } else if (index == 1) {
+                        this.stack.push(a.notEqual(b))
+                    } else if (index == 2) {
+                        this.stack.push(a.greaterThan(b))
+                    } else if (index == 3) {
+                        this.stack.push(a.lessThan(b))
+                    } else if (index == 4) {
+                        this.stack.push(a.greaterThanOrEqual(b))
+                    } else if (index == 5) {
+                        this.stack.push(a.lessThanOrEqual(b))
+                    }
+                    break
+                case InstType.Jump:
+                    i = index
+                    continue
+                case InstType.JumpFalse:
+                    let condition = this.stack.pop() as ObjectBoolean
+                    if (!condition.value) {
+                        i = index
+                        continue
+                    }
                 case InstType.Pop:
                     this.stack.pop()
                     break

@@ -1,10 +1,11 @@
-async fn add(a, b) {
-    return a / b
+a = 0
+
+if a > 0 {
+    print(">")
+} else if a < 0 {
+    print("<")
+} else {
+    print("==")
 }
 
-async fn call(a, b) {
-    return await add(a, b)
-}
-res = call(1, 2)
-result = coroutine(res)
-print(result)
+print(1)

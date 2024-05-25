@@ -18,6 +18,10 @@ enum InstType {
     FormatValue,
     BuildString,
     Await,
+    MakeModule,
+    Compare,
+    Jump,
+    JumpFalse,
     Pop,
     Return,
 }
@@ -43,7 +47,7 @@ class Instruction {
         return this.index * 100 + this.inst_type
     }
 
-    toJSON(): string {
+    toString(): string {
         switch (this.inst_type) {
             case InstType.Use:
                 return 'Use'
@@ -83,6 +87,14 @@ class Instruction {
                 return 'BuildString'
             case InstType.Await:
                 return 'Await'
+            case InstType.MakeModule:
+                return 'MakeModule'
+            case InstType.Compare:
+                return 'Compare'
+            case InstType.Jump:
+                return 'Jump'
+            case InstType.JumpFalse:
+                return 'JumpFalse'
             case InstType.Pop:
                 return 'Pop'
             case InstType.Return:

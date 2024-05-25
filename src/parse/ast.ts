@@ -183,6 +183,24 @@ class Statement extends Expression {
     }
 }
 
+class If extends Expression {
+    condition: Expression
+    consequence: Expression[]
+    alternative: Expression[]
+    type = 'If'
+
+    constructor(
+        condition: Expression,
+        consequence: Expression[],
+        alternative: Expression[],
+    ) {
+        super()
+        this.condition = condition
+        this.consequence = consequence
+        this.alternative = alternative
+    }
+}
+
 export {
     Expression,
     Program,
@@ -199,4 +217,5 @@ export {
     Identifier,
     Infix,
     Statement,
+    If,
 }

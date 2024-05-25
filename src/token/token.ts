@@ -102,6 +102,83 @@ class Token {
             '',
         )
     }
+
+    toString(): string {
+        switch (this.token_type) {
+            case TokenType.Void:
+                return `<Void: ${this.content}>`
+            case TokenType.Keyword:
+                return `<Keyword: ${this.content}>`
+            case TokenType.Identifier:
+                return `<Identifier: ${this.content}>`
+            case TokenType.Integer:
+                return `<Integer: ${this.content}>`
+            case TokenType.Float:
+                return `<Float: ${this.content}>`
+            case TokenType.String:
+                return `<String: ${this.content}>`
+            case TokenType.Boolean:
+                return `<Boolean: ${this.content}>`
+            case TokenType.Not:
+                return `<Not>`
+            case TokenType.Plus:
+                return `<Plus>`
+            case TokenType.Minus:
+                return `<Minus>`
+            case TokenType.Multiply:
+                return `<Multiply>`
+            case TokenType.Divide:
+                return `<Divide>`
+            case TokenType.Mod:
+                return `<Mod>`
+            case TokenType.LeftShift:
+                return `<LeftShift>`
+            case TokenType.RightShift:
+                return `<RightShift>`
+            case TokenType.Power:
+                return `<Power>`
+            case TokenType.Comma:
+                return `<Comma>`
+            case TokenType.Colon:
+                return `<Colon>`
+            case TokenType.Equal:
+                return `<Equal>`
+            case TokenType.Greater:
+                return `<Greater>`
+            case TokenType.GreaterEqual:
+                return `<GreaterEqual>`
+            case TokenType.Less:
+                return `<Less>`
+            case TokenType.LessEqual:
+                return `<LessEqual>`
+            case TokenType.NotEqual:
+                return `<NotEqual>`
+            case TokenType.LeftParen:
+                return `<LeftParen>`
+            case TokenType.RightParen:
+                return `<RightParen>`
+            case TokenType.LeftBrace:
+                return `<LeftBrace>`
+            case TokenType.RightBrace:
+                return `<RightBrace>`
+            case TokenType.Assign:
+                return `<Assign>`
+            case TokenType.Dot:
+                return `<Dot>`
+            case TokenType.SlComment:
+                return `<SlComment>`
+            case TokenType.MlComment:
+                return `<MlComment>`
+            case TokenType.Next:
+                return `<Next> ${this.metadata.area.start}`
+            case TokenType.MlString:
+                return `<MlString>`
+            case TokenType.Sof:
+                return `<Sof>`
+            case TokenType.Eof:
+                return `<Eof>`
+        }
+    }
 }
 
 export { Token, TokenType }

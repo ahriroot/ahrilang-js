@@ -18,6 +18,7 @@ import {
     Expression,
     Function,
     Identifier,
+    If,
     Infix,
     Integer,
     Parser,
@@ -106,6 +107,9 @@ class Compiler {
                 break
             case 'Statement':
                 this.compile_statement(node as Statement)
+                break
+            case 'If':
+                this.compile_if(node as If)
                 break
         }
         return [this.consts, this.names, this.instructions]
@@ -377,6 +381,36 @@ class Compiler {
                     new Instruction(InstType.StoreName, index),
                 )
                 break
+            case TokenType.Equal:
+                this.compile(left)
+                this.compile(right)
+                this.make_instruction(new Instruction(InstType.Compare, 0))
+                break
+            case TokenType.NotEqual:
+                this.compile(left)
+                this.compile(right)
+                this.make_instruction(new Instruction(InstType.Compare, 1))
+                break
+            case TokenType.Greater:
+                this.compile(left)
+                this.compile(right)
+                this.make_instruction(new Instruction(InstType.Compare, 2))
+                break
+            case TokenType.Less:
+                this.compile(left)
+                this.compile(right)
+                this.make_instruction(new Instruction(InstType.Compare, 3))
+                break
+            case TokenType.GreaterEqual:
+                this.compile(left)
+                this.compile(right)
+                this.make_instruction(new Instruction(InstType.Compare, 4))
+                break
+            case TokenType.LessEqual:
+                this.compile(left)
+                this.compile(right)
+                this.make_instruction(new Instruction(InstType.Compare, 5))
+                break
             default:
                 break
         }
@@ -384,6 +418,25 @@ class Compiler {
 
     compile_statement(node: Statement) {
         this.compile(node.expression)
+    }
+
+    compile_if(node: If) {
+        let condition = node.condition
+        let consequence = node.consequence
+        let alternative = node.alternative
+        this.compile(condition)
+        let index = this.make_instruction(
+            new Instruction(InstType.JumpFalse, 0),
+        )
+        for (let statement of consequence) {
+            this.compile(statement)
+        }
+        let index2 = this.make_instruction(new Instruction(InstType.Jump, 0))
+        this.instructions[index].index = this.instructions.length
+        for (let statement of alternative) {
+            this.compile(statement)
+        }
+        this.instructions[index2].index = this.instructions.length
     }
 
     static build(code: string): Uint8Array {

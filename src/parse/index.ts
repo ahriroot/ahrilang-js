@@ -17,6 +17,7 @@ import {
     Boolean,
     Call,
     Identifier,
+    If,
 } from './ast'
 
 const PREFIX = [
@@ -35,6 +36,14 @@ const INFIX = [
     TokenType.Divide,
     TokenType.Mod,
     TokenType.Assign,
+    TokenType.Less,
+    TokenType.Greater,
+    TokenType.LessEqual,
+    TokenType.GreaterEqual,
+    TokenType.Equal,
+    TokenType.NotEqual,
+    TokenType.LeftShift,
+    TokenType.RightShift,
 ]
 
 class Parser {
@@ -87,13 +96,6 @@ class Parser {
     }
 
     parse_expression_statement(): Expression {
-        while (
-            this.token.token_type == TokenType.Next ||
-            this.token.token_type == TokenType.SlComment ||
-            this.token.token_type == TokenType.MlComment
-        ) {
-            this.next_token()
-        }
         let expression = this.parse_expression(Precedence.Lowest)
         while (
             this.next.token_type == TokenType.Next ||
@@ -106,6 +108,13 @@ class Parser {
     }
 
     parse_expression(precedence: Precedence): Expression {
+        while (
+            this.token.token_type == TokenType.Next ||
+            this.token.token_type == TokenType.SlComment ||
+            this.token.token_type == TokenType.MlComment
+        ) {
+            this.next_token()
+        }
         if (!PREFIX.includes(this.token.token_type)) {
             let info = `Invalid syntax, unexpected expression: [line: {${this.token.metadata.area.start[0]}}, column: {${this.token.metadata.area.start[1]}}]`
             let err = new ErrorSyntax(info)
@@ -184,6 +193,8 @@ class Parser {
                 return this.parse_await()
             case 'return':
                 return this.parse_return()
+            case 'if':
+                return this.parse_if()
             default:
                 throw new ErrorSyntax(
                     `Invalid keyword ${this.token.metadata.area}`,
@@ -423,6 +434,63 @@ class Parser {
         let right = this.parse_expression(precedence)
         return new Infix(left, right, token)
     }
+
+    parse_if(): Expression {
+        this.next_token()
+        let condition = this.parse_expression(Precedence.Lowest)
+        this.next_token()
+
+        while (this.token.token_type == TokenType.Next) {
+            this.next_token()
+        }
+
+        if (this.token.token_type == TokenType.LeftBrace) {
+            this.next_token()
+        } else {
+            throw new ErrorSyntax(
+                `Invalid syntax ${this.token.metadata.area.start}`,
+            )
+        }
+
+        let consequence = []
+        // @ts-ignore
+        while (this.token.token_type != TokenType.RightBrace) {
+            consequence.push(this.parse_statement())
+            this.next_token()
+        }
+        this.next_token()
+
+        let alternative = []
+        if (
+            this.token.token_type == TokenType.Keyword &&
+            this.token.content == 'else'
+        ) {
+            this.next_token()
+
+            if (
+                this.token.token_type == TokenType.Keyword &&
+                // @ts-ignore
+                this.token.content == 'if'
+            ) {
+                let e = this.parse_if()
+                alternative.push(e)
+            } else {
+                if (this.token.token_type == TokenType.LeftBrace) {
+                    this.next_token()
+                } else {
+                    throw new ErrorSyntax(
+                        `Invalid syntax ${this.token.metadata.area}`,
+                    )
+                }
+                while (this.token.token_type != TokenType.RightBrace) {
+                    alternative.push(this.parse_statement())
+                    this.next_token()
+                }
+                this.next_token()
+            }
+        }
+        return new If(condition, consequence, alternative)
+    }
 }
 
 export { Parser }
@@ -442,4 +510,5 @@ export {
     Boolean,
     Call,
     Identifier,
+    If,
 }

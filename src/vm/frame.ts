@@ -11,7 +11,13 @@ import {
     ObjectString,
     StdFunction,
 } from '../lib'
-import { ObjectArray, ObjectAsyncFrame, ObjectFuture, ObjectNull } from '../object'
+import {
+    ObjectArray,
+    ObjectAsyncFrame,
+    ObjectBoolean,
+    ObjectFuture,
+    ObjectNull,
+} from '../object'
 import { AsyncFrame } from './coroutine'
 import { Runtime } from './runtime'
 import { print, thread, coroutine } from './std'
@@ -206,6 +212,32 @@ class Frame {
                     break
                 case InstType.Await:
                     throw new ErrorSyntax("'await' outside async function")
+                case InstType.Compare:
+                    b = this.stack.pop() as ObjectBase
+                    a = this.stack.pop() as ObjectBase
+                    if (index == 0) {
+                        this.stack.push(a.equal(b))
+                    } else if (index == 1) {
+                        this.stack.push(a.notEqual(b))
+                    } else if (index == 2) {
+                        this.stack.push(a.greaterThan(b))
+                    } else if (index == 3) {
+                        this.stack.push(a.lessThan(b))
+                    } else if (index == 4) {
+                        this.stack.push(a.greaterThanOrEqual(b))
+                    } else if (index == 5) {
+                        this.stack.push(a.lessThanOrEqual(b))
+                    }
+                    break
+                case InstType.Jump:
+                    i = index
+                    continue
+                case InstType.JumpFalse:
+                    let condition = this.stack.pop() as ObjectBoolean
+                    if (!condition.value) {
+                        i = index
+                        continue
+                    }
                 case InstType.Pop:
                     this.stack.pop()
                     break
