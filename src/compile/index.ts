@@ -226,6 +226,7 @@ class Compiler {
                         this.make_instruction(
                             new Instruction(InstType.CallFunction, count),
                         )
+                        this.make_instruction(new Instruction(InstType.Pop))
                         break
                     case 'thread':
                         this.make_instruction(

@@ -94,7 +94,7 @@ class Instruction {
             case InstType.Jump:
                 return 'Jump'
             case InstType.JumpFalse:
-                return 'JumpFalse'
+                return `JumpFalse(${this.index})`
             case InstType.Pop:
                 return 'Pop'
             case InstType.Return:

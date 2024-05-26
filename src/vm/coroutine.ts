@@ -59,12 +59,15 @@ class AsyncFrame {
     }
 
     async run(args: ObjectBase | null): Promise<ObjectBase> {
-        console.log(this.instructions.value.map((x) => x.toString()))
         let instructions = this.instructions.value
         let a
         let b
-        for (let i = 0; i < instructions.length; i++) {
-            let inst = instructions[i]
+        let point = 0
+        while (true) {
+            if (point >= instructions.length) {
+                break
+            }
+            let inst = instructions[point]
             let index = inst.index
             switch (inst.inst_type) {
                 case InstType.Use:
@@ -225,7 +228,6 @@ class AsyncFrame {
                     }
                     break
                 case InstType.Compare:
-                    console.log('Compare', this.locals)
                     b = this.stack.pop() as ObjectBase
                     a = this.stack.pop() as ObjectBase
                     if (index == 0) {
@@ -243,12 +245,12 @@ class AsyncFrame {
                     }
                     break
                 case InstType.Jump:
-                    i = index
+                    point = index
                     continue
                 case InstType.JumpFalse:
                     let condition = this.stack.pop() as ObjectBoolean
                     if (!condition.value) {
-                        i = index
+                        point = index
                         continue
                     }
                 case InstType.Pop:
@@ -258,6 +260,7 @@ class AsyncFrame {
                     let ret = this.stack.pop() as ObjectBase
                     return ret
             }
+            point++
         }
         return new ObjectNull()
     }

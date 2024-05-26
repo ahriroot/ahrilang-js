@@ -4,6 +4,7 @@ import { Token, TokenType } from './token'
 
 class Lexer {
     code: string
+    last: Token
     current: Token
     line: number
     column: number
@@ -12,6 +13,7 @@ class Lexer {
 
     constructor(code: string) {
         this.code = code
+        this.last = Token.void()
         this.current = Token.void()
         this.line = 1
         this.column = 0
@@ -95,6 +97,7 @@ class Lexer {
             case TokenType.Eof:
                 break
         }
+        this.last = token
         this.current = next
         return token
     }
@@ -329,6 +332,19 @@ class Lexer {
             case TokenType.Integer:
             case TokenType.Float:
                 this.current.content += c
+                break
+            case TokenType.Minus:
+                if (
+                    this.last.token_type != TokenType.Identifier &&
+                    this.last.token_type != TokenType.Float &&
+                    this.last.token_type != TokenType.Integer
+                ) {
+                    this.current.content += c
+                    this.current.token_type = TokenType.Integer
+                } else {
+                    let t = this.make_token(this.new_number(c))
+                    return t
+                }
                 break
             default:
                 return this.make_token(this.new_number(c))
