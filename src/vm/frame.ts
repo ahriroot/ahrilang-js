@@ -63,8 +63,12 @@ class Frame {
         let instructions = this.instructions.value
         let a
         let b
-        for (let i = 0; i < instructions.length; i++) {
-            let inst = instructions[i]
+        let point = 0
+        while (true) {
+            if (point >= instructions.length) {
+                break
+            }
+            let inst = instructions[point]
             let index = inst.index
             switch (inst.inst_type) {
                 case InstType.Use:
@@ -230,14 +234,15 @@ class Frame {
                     }
                     break
                 case InstType.Jump:
-                    i = index
+                    point = index
                     continue
                 case InstType.JumpFalse:
                     let condition = this.stack.pop() as ObjectBoolean
                     if (!condition.value) {
-                        i = index
+                        point = index
                         continue
                     }
+                    break
                 case InstType.Pop:
                     this.stack.pop()
                     break
@@ -245,6 +250,7 @@ class Frame {
                     let ret = this.stack.pop() as ObjectBase
                     return ret
             }
+            point++
         }
         return new ObjectNull()
     }

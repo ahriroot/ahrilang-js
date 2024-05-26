@@ -253,6 +253,7 @@ class AsyncFrame {
                         point = index
                         continue
                     }
+                    break
                 case InstType.Pop:
                     this.stack.pop()
                     break
