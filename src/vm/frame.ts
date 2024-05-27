@@ -100,7 +100,9 @@ class Frame {
                         if (argus.length > index) {
                             this.stack.push(argus[index])
                         } else {
-                            return new ObjectError(new ErrorRuntime('No argument'))
+                            return new ObjectError(
+                                new ErrorRuntime('No argument'),
+                            )
                         }
                     }
                     break
@@ -207,7 +209,10 @@ class Frame {
                         let std = (func as unknown as ObjectStd).value
                         if (std.type == 'StdFunction') {
                             let standard = std as StdFunction
-                            this.stack.push(standard.value(ars, this.runtime))
+                            let res = standard.value(ars, this.runtime)
+                            if (res) {
+                                this.stack.push(res)
+                            }
                         } else {
                             throw new ErrorRuntime('Not implemented yet')
                         }

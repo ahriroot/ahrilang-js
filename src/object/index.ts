@@ -13,7 +13,7 @@ class Standard {
 type Function = (
     obj: ObjectBase,
     runtime?: Runtime,
-) => ObjectBase | Promise<ObjectBase>
+) => ObjectBase | Promise<ObjectBase> | void
 
 class StdFunction extends Standard {
     value: Function

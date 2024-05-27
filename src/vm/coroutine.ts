@@ -220,7 +220,9 @@ class AsyncFrame {
                             if (res instanceof Promise) {
                                 this.stack.push(await res)
                             } else {
-                                this.stack.push(res)
+                                if (res) {
+                                    this.stack.push(res)
+                                }
                             }
                         } else {
                             throw new ErrorRuntime('Not implemented yet')

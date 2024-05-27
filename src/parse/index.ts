@@ -428,10 +428,10 @@ class Parser {
                 this.next_token()
                 continue
             }
-            args.push(this.parse_expression(Precedence.Lowest))
+            let e = this.parse_expression(Precedence.Lowest)
+            args.push(e)
             this.next_token()
         }
-        this.next_token()
         return new Call(token, args)
     }
 
