@@ -108,7 +108,7 @@ class Token {
             case TokenType.Void:
                 return `<Void: ${this.content}>`
             case TokenType.Keyword:
-                return `<Keyword: ${this.content}>`
+                return `<Keyword: ${this.content} ${this.metadata.area.toString()}>`
             case TokenType.Identifier:
                 return `<Identifier: ${this.content}>`
             case TokenType.Integer:

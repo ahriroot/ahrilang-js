@@ -18,6 +18,10 @@ import {
     Call,
     Identifier,
     If,
+    Loop,
+    While,
+    Continue,
+    Break,
 } from './ast'
 
 const PREFIX = [
@@ -195,9 +199,17 @@ class Parser {
                 return this.parse_return()
             case 'if':
                 return this.parse_if()
+            case 'loop':
+                return this.parse_loop()
+            case 'while':
+                return this.parse_while()
+            case 'continue':
+                return this.parse_continue()
+            case 'break':
+                return this.parse_break()
             default:
                 throw new ErrorSyntax(
-                    `Invalid keyword ${this.token.metadata.area}`,
+                    `Invalid keyword ${this.token.toString()}`,
                 )
         }
     }
@@ -491,6 +503,69 @@ class Parser {
         }
         return new If(condition, consequence, alternative)
     }
+
+    parse_loop(): Expression {
+        this.next_token()
+
+        while (this.token.token_type == TokenType.Next) {
+            this.next_token()
+        }
+
+        if (this.token.token_type != TokenType.LeftBrace) {
+            throw new ErrorSyntax(`Invalid syntax ${this.token.metadata.area}`)
+        }
+        this.next_token()
+
+        let consequence = []
+        // @ts-ignore
+        while (this.token.token_type != TokenType.RightBrace) {
+            consequence.push(this.parse_statement())
+            this.next_token()
+        }
+        this.next_token()
+        return new Loop(consequence)
+    }
+
+    parse_while(): Expression {
+        this.next_token()
+        let condition = this.parse_expression(Precedence.Lowest)
+        this.next_token()
+
+        while (this.token.token_type == TokenType.Next) {
+            this.next_token()
+        }
+
+        if (this.token.token_type != TokenType.LeftBrace) {
+            throw new ErrorSyntax(`Invalid syntax ${this.token.metadata.area}`)
+        }
+        this.next_token()
+
+        let consequence = []
+        // @ts-ignore
+        while (this.token.token_type != TokenType.RightBrace) {
+            consequence.push(this.parse_statement())
+            this.next_token()
+        }
+        this.next_token()
+        return new While(condition, consequence)
+    }
+
+    parse_continue(): Expression {
+        return new Continue()
+    }
+
+    parse_break(): Expression {
+        let e = null
+        this.next_token()
+
+        if (
+            this.token.token_type != TokenType.Next &&
+            this.token.token_type != TokenType.RightBrace
+        ) {
+            e = this.parse_expression(Precedence.Lowest)
+        }
+        return new Break(e)
+    }
 }
 
 export { Parser }
@@ -511,4 +586,8 @@ export {
     Call,
     Identifier,
     If,
+    Loop,
+    While,
+    Continue,
+    Break,
 }

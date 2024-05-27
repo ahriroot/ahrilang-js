@@ -201,6 +201,46 @@ class If extends Expression {
     }
 }
 
+class Loop extends Expression {
+    consequence: Expression[]
+    type = 'Loop'
+
+    constructor(consequence: Expression[]) {
+        super()
+        this.consequence = consequence
+    }
+}
+
+class While extends Expression {
+    condition: Expression
+    consequence: Expression[]
+    type = 'While'
+
+    constructor(condition: Expression, consequence: Expression[]) {
+        super()
+        this.condition = condition
+        this.consequence = consequence
+    }
+}
+
+class Continue extends Expression {
+    type = 'Continue'
+
+    constructor() {
+        super()
+    }
+}
+
+class Break extends Expression {
+    expression: Expression | null
+    type = 'Break'
+
+    constructor(expression: Expression | null) {
+        super()
+        this.expression = expression
+    }
+}
+
 export {
     Expression,
     Program,
@@ -218,4 +258,8 @@ export {
     Infix,
     Statement,
     If,
+    Loop,
+    While,
+    Continue,
+    Break,
 }

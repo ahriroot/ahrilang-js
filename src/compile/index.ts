@@ -14,13 +14,16 @@ import {
     AsyncFunction,
     Await,
     Boolean,
+    Break,
     Call,
+    Continue,
     Expression,
     Function,
     Identifier,
     If,
     Infix,
     Integer,
+    Loop,
     Parser,
     Program,
     Return,
@@ -28,6 +31,7 @@ import {
     Statements,
     String,
     Use,
+    While,
 } from '../parse'
 import { Lexer, TokenType } from '../token'
 import { AsyncFrame, Runtime } from '../vm'
@@ -37,12 +41,16 @@ class Compiler {
     consts: ObjectBase[]
     names: ObjectBase[]
     globals: ObjectBase[]
+    break_index: number[][]
+    continue_index: number[][]
 
     constructor(names: ObjectBase[], globals: ObjectBase[]) {
         this.instructions = []
         this.consts = []
         this.names = names
         this.globals = globals
+        this.break_index = []
+        this.continue_index = []
     }
 
     make_const(obj: ObjectBase): number {
@@ -51,9 +59,12 @@ class Compiler {
     }
 
     make_name(obj: ObjectBase): number {
-        let index = this.names.indexOf(obj)
-        if (index >= 0) {
-            return index
+        let object = obj as ObjectString
+        for (let i = 0; i < this.names.length; i++) {
+            let name = this.names[i] as ObjectString
+            if (name.value == object.value) {
+                return i
+            }
         }
         this.names.push(obj)
         return this.names.length - 1
@@ -110,6 +121,18 @@ class Compiler {
                 break
             case 'If':
                 this.compile_if(node as If)
+                break
+            case 'Loop':
+                this.compile_loop(node as Loop)
+                break
+            case 'While':
+                this.compile_while(node as While)
+                break
+            case 'Continue':
+                this.compile_continue(node as Continue)
+                break
+            case 'Break':
+                this.compile_break(node as Break)
                 break
         }
         return [this.consts, this.names, this.instructions]
@@ -438,6 +461,61 @@ class Compiler {
             this.compile(statement)
         }
         this.instructions[index2].index = this.instructions.length
+    }
+
+    compile_loop(node: Loop) {
+        this.break_index.push([])
+        this.continue_index.push([])
+        let index = this.instructions.length
+        for (let statement of node.consequence) {
+            this.compile(statement)
+        }
+        this.instructions.push(new Instruction(InstType.Jump, index))
+        let indexed = this.break_index.pop() || []
+        for (let i of indexed) {
+            this.instructions[i].index = this.instructions.length
+        }
+        let indexed2 = this.continue_index.pop() || []
+        for (let i of indexed2) {
+            this.instructions[i].index = index
+        }
+    }
+
+    compile_while(node: While) {
+        let condition = node.condition
+        let consequence = node.consequence
+        let index = this.instructions.length
+        this.compile(condition)
+        let end = this.make_instruction(new Instruction(InstType.JumpFalse, 0))
+        this.break_index.push([])
+        this.continue_index.push([])
+        for (let e of consequence) {
+            this.compile(e)
+        }
+        this.make_instruction(new Instruction(InstType.Jump, index))
+        let indexed = this.break_index.pop() || []
+        for (let i of indexed) {
+            this.instructions[i].index = this.instructions.length
+        }
+        let indexed2 = this.continue_index.pop() || []
+        for (let i of indexed2) {
+            this.instructions[i].index = index
+        }
+        this.instructions[end].index = this.instructions.length
+    }
+
+    compile_continue(_: Continue) {
+        let index = this.make_instruction(new Instruction(InstType.Jump, 0))
+        this.continue_index[this.continue_index.length - 1].push(index)
+    }
+
+    compile_break(node: Break) {
+        if (node.expression !== null) {
+            this.compile(node.expression)
+        } else {
+            let index = this.make_instruction(new Instruction(InstType.Jump, 0))
+            this.break_index[this.break_index.length - 1].push(index)
+        }
     }
 
     static build(code: string): Uint8Array {

@@ -1,4 +1,5 @@
 const KEYWORDS = [
+    'mod',
     'pub',
     'use',
     'as',
@@ -12,6 +13,8 @@ const KEYWORDS = [
     'for',
     'while',
     'loop',
+    'continue',
+    'break',
     'true',
     'false',
 ]
@@ -27,6 +30,10 @@ class Area {
 
     static init() {
         return new Area([0, 0], [0, 0])
+    }
+
+    toString(): string {
+        return `${this.start[0]},${this.start[1]} - ${this.end[0]},${this.end[1]}`
     }
 }
 
