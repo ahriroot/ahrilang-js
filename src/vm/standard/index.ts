@@ -33,8 +33,7 @@ const display = (args: ObjectBase, _runtime?: Runtime): ObjectBase => {
     let instructionsObject = argument.value[0] as ObjectInstructions
     let instructions = instructionsObject.value
 
-    console.log(instructions.map((i) => i.toString()).join('\n'))
-    return new ObjectNull()
+    return new ObjectString(instructions.map((i) => i.toString()).join('\n'))
 }
 
 const time_sleep = (args: ObjectBase, _runtime?: Runtime) => {
