@@ -15,12 +15,13 @@ import {
     ObjectArray,
     ObjectAsyncFrame,
     ObjectBoolean,
+    ObjectError,
     ObjectFuture,
     ObjectNull,
 } from '../object'
 import { AsyncFrame } from './coroutine'
 import { Runtime } from './runtime'
-import { print, thread, coroutine } from './std'
+import { print, thread, coroutine } from './builtin'
 
 type Obj = ObjectBase | Promise<ObjectBase> | undefined
 
@@ -99,7 +100,7 @@ class Frame {
                         if (argus.length > index) {
                             this.stack.push(argus[index])
                         } else {
-                            throw new ErrorRuntime('No argument')
+                            return new ObjectError(new ErrorRuntime('No argument'))
                         }
                     }
                     break

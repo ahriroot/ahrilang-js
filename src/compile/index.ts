@@ -148,7 +148,9 @@ class Compiler {
         let token = node.name
         let path = node.path
 
-        let index = this.make_const(new ObjectString(path.join('.')))
+        let index = this.make_const(
+            new ObjectString(path.map((p) => p.content).join('.')),
+        )
         this.make_instruction(new Instruction(InstType.LoadConst, index))
         this.make_instruction(new Instruction(InstType.Use, 1))
         let index_name = this.make_name(new ObjectString(token.content))
@@ -358,12 +360,8 @@ class Compiler {
 
     compile_identifier(node: Identifier) {
         let token = node.token
-        let index = this.names.findIndex(
-            (item) => (item as ObjectString).value === token.content,
-        )
-        if (index >= 0) {
-            this.make_instruction(new Instruction(InstType.LoadName, index))
-        }
+        let index = this.make_name(new ObjectString(token.content))
+        this.make_instruction(new Instruction(InstType.LoadName, index))
     }
 
     compile_infix(node: Infix) {

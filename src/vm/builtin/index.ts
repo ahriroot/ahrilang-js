@@ -4,8 +4,8 @@ import {
     ObjectBase,
     ObjectFuture,
     ObjectNull,
-} from '../object'
-import { Runtime } from './runtime'
+} from '../../object'
+import { Runtime } from '../runtime'
 
 const print = (args: ObjectBase, runtime?: Runtime): ObjectBase => {
     let argument = args as ObjectArray

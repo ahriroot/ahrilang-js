@@ -14,12 +14,14 @@ import {
     ObjectArray,
     ObjectAsyncFrame,
     ObjectBoolean,
+    ObjectError,
     ObjectFuture,
     ObjectNull,
 } from '../object'
 import { Frame } from './frame'
 import { Runtime } from './runtime'
-import { print, thread, coroutine } from './std'
+import { print, thread, coroutine } from './builtin'
+import { import_std } from './standard'
 
 type Obj = ObjectBase | Promise<ObjectBase> | undefined
 
@@ -71,7 +73,8 @@ class AsyncFrame {
             let index = inst.index
             switch (inst.inst_type) {
                 case InstType.Use:
-                    // TODO: import module
+                    let path = this.stack.pop() as ObjectString
+                    this.stack.push(import_std(new ObjectArray([path])))
                     break
                 case InstType.LoadStd:
                     if (index == 0) {
@@ -94,11 +97,19 @@ class AsyncFrame {
                     if (index in this.locals) {
                         this.stack.push(this.locals[index])
                     } else {
-                        let argus = (args as ObjectArray).value
-                        if (argus.length > index) {
-                            this.stack.push(argus[index])
+                        if (args !== null) {
+                            let argus = (args as ObjectArray).value
+                            if (argus.length > index) {
+                                this.stack.push(argus[index])
+                            } else {
+                                return new ObjectError(
+                                    new ErrorRuntime('No argument'),
+                                )
+                            }
                         } else {
-                            throw new ErrorRuntime('No argument')
+                            return new ObjectError(
+                                new ErrorRuntime('No argument'),
+                            )
                         }
                     }
                     break

@@ -4,3 +4,12 @@ while a < 10 {
     print(a)
     a = a + 1
 }
+
+code = `
+a = 1
+`
+
+use a.dis.parse
+use a.dis.display
+inst = parse(code)
+display(inst)
