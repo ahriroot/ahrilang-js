@@ -22,10 +22,15 @@ import {
     While,
     Continue,
     Break,
+    List,
+    Map,
 } from './ast'
 
 const PREFIX = [
     TokenType.Integer,
+    TokenType.LeftParen,
+    TokenType.LeftBracket,
+    TokenType.LeftBrace,
     TokenType.LeftParen,
     TokenType.Keyword,
     TokenType.Identifier,
@@ -133,6 +138,12 @@ class Parser {
             case TokenType.LeftParen:
                 e = this.parse_group()
                 break
+            case TokenType.LeftBracket:
+                e = this.parse_list()
+                break
+            case TokenType.LeftBrace:
+                e = this.parse_map()
+                break
             case TokenType.Keyword:
                 e = this.parse_keyword()
                 break
@@ -177,6 +188,37 @@ class Parser {
         let e = this.parse_expression(Precedence.Lowest)
         this.expect_next(TokenType.RightParen)
         return e
+    }
+
+    parse_list(): Expression {
+        let body = []
+        while (true) {
+            this.next_token()
+            if (this.token.token_type == TokenType.Comma) {
+                continue
+            } else if (this.token.token_type == TokenType.RightBracket) {
+                break
+            }
+            body.push(this.parse_statement())
+        }
+        return new List(body)
+    }
+
+    parse_map(): Expression {
+        let body = []
+        while (true) {
+            this.next_token()
+            if (
+                this.token.token_type == TokenType.Comma ||
+                this.token.token_type == TokenType.Colon
+            ) {
+                continue
+            } else if (this.token.token_type == TokenType.RightBrace) {
+                break
+            }
+            body.push(this.parse_statement())
+        }
+        return new Map(body)
     }
 
     parse_keyword(): Expression {
@@ -590,4 +632,6 @@ export {
     While,
     Continue,
     Break,
+    List,
+    Map,
 }

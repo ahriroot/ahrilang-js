@@ -241,6 +241,26 @@ class Break extends Expression {
     }
 }
 
+class List extends Expression {
+    expressions: Expression[]
+    type = 'List'
+
+    constructor(expressions: Expression[]) {
+        super()
+        this.expressions = expressions
+    }
+}
+
+class Map extends Expression {
+    expressions: Expression[]
+    type = 'Map'
+
+    constructor(expressions: Expression[]) {
+        super()
+        this.expressions = expressions
+    }
+}
+
 export {
     Expression,
     Program,
@@ -262,4 +282,6 @@ export {
     While,
     Continue,
     Break,
+    List,
+    Map,
 }

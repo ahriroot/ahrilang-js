@@ -17,6 +17,7 @@ import {
     ObjectBoolean,
     ObjectError,
     ObjectFuture,
+    ObjectMap,
     ObjectNull,
 } from '../object'
 import { AsyncFrame } from './coroutine'
@@ -255,6 +256,22 @@ class Frame {
                 case InstType.Return:
                     let ret = this.stack.pop() as ObjectBase
                     return ret
+                case InstType.BuildList:
+                    let list = []
+                    for (let i = 0; i < index; i++) {
+                        list.unshift(this.stack.pop() as ObjectBase)
+                    }
+                    this.stack.push(new ObjectArray(list))
+                    break
+                case InstType.BuildMap:
+                    let map = new Map()
+                    for (let i = 0; i < index; i++) {
+                        let value = this.stack.pop() as ObjectBase
+                        let key = this.stack.pop() as ObjectBase
+                        map.set(key, value)
+                    }
+                    this.stack.push(new ObjectMap(map))
+                    break
             }
             point++
         }

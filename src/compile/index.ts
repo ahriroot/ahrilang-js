@@ -23,7 +23,9 @@ import {
     If,
     Infix,
     Integer,
+    List,
     Loop,
+    Map,
     Parser,
     Program,
     Return,
@@ -141,6 +143,12 @@ class Compiler {
                 break
             case 'Break':
                 this.compile_break(node as Break)
+                break
+            case 'List':
+                this.compile_list(node as List)
+                break
+            case 'Map':
+                this.compile_map(node as Map)
                 break
         }
         return [this.consts, this.names, this.instructions]
@@ -557,6 +565,24 @@ class Compiler {
             let index = this.make_instruction(new Instruction(InstType.Jump, 0))
             this.break_index[this.break_index.length - 1].push(index)
         }
+    }
+
+    compile_list(node: List) {
+        for (let e of node.expressions) {
+            this.compile(e)
+        }
+        this.make_instruction(
+            new Instruction(InstType.BuildList, node.expressions.length),
+        )
+    }
+
+    compile_map(node: List) {
+        for (let e of node.expressions) {
+            this.compile(e)
+        }
+        this.make_instruction(
+            new Instruction(InstType.BuildMap, node.expressions.length / 2),
+        )
     }
 
     static build(code: string): Uint8Array {

@@ -695,43 +695,28 @@ class ObjectArray extends ObjectBase {
 }
 
 class ObjectMap extends ObjectBase {
-    keys: { [key: symbol]: ObjectBase }
-    value: { [key: symbol]: ObjectBase }
+    value: Map<ObjectBase, ObjectBase>
     type = 'ObjectMap'
 
-    constructor(value: { [key: string]: ObjectBase }) {
+    constructor(value: Map<ObjectBase, ObjectBase>) {
         super()
-        this.keys = {}
         this.value = value
     }
 
     toString(): string {
         let tmp = []
-        for (let k in this.value) {
-            let key = k as unknown as symbol
-            tmp.push(k + ': ' + this.value[key].toString())
-        }
-        return '{' + tmp.join(', ') + '}'
-    }
-
-    format(): string {
-        let tmp = []
-        for (let k in this.value) {
-            let key = k as unknown as symbol
-            tmp.push(k + ':' + this.value[key].format())
+        for (let [k, v] of this.value) {
+            tmp.push(k.toString() + ': ' + v.toString())
         }
         return '{' + tmp.join(',') + '}'
     }
 
     get(key: ObjectBase) {
-        let k = key.hash()
-        return this.value[k]
+        return this.value.get(key)
     }
 
     set(key: ObjectBase, value: ObjectBase) {
-        let k = key.hash()
-        this.keys[k] = key
-        this.value[k] = value
+        this.value.set(key, value)
     }
 }
 

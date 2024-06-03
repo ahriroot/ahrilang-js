@@ -16,6 +16,7 @@ import {
     ObjectBoolean,
     ObjectError,
     ObjectFuture,
+    ObjectMap,
     ObjectNull,
 } from '../object'
 import { Frame } from './frame'
@@ -208,7 +209,10 @@ class AsyncFrame {
                         let std = (func as unknown as ObjectStd).value
                         if (std.type == 'StdFunction') {
                             let standard = std as StdFunction
-                            let res = standard.value(ars, this.runtime) as ObjectBase
+                            let res = standard.value(
+                                ars,
+                                this.runtime,
+                            ) as ObjectBase
                             this.stack.push(res)
                         } else {
                             throw new ErrorRuntime('Not implemented yet')
@@ -259,6 +263,22 @@ class AsyncFrame {
                 case InstType.Return:
                     let ret = this.stack.pop() as ObjectBase
                     return ret
+                case InstType.BuildList:
+                    let list = []
+                    for (let i = 0; i < index; i++) {
+                        list.unshift(this.stack.pop() as ObjectBase)
+                    }
+                    this.stack.push(new ObjectArray(list))
+                    break
+                case InstType.BuildMap:
+                    let map = new Map()
+                    for (let i = 0; i < index; i++) {
+                        let value = this.stack.pop() as ObjectBase
+                        let key = this.stack.pop() as ObjectBase
+                        map.set(key, value)
+                    }
+                    this.stack.push(new ObjectMap(map))
+                    break
             }
             point++
         }

@@ -138,7 +138,14 @@ class Lexer {
                         if (t) {
                             return t
                         }
-                    } else if (c == '(' || c == ')' || c == '{' || c == '}') {
+                    } else if (
+                        c == '(' ||
+                        c == ')' ||
+                        c == '{' ||
+                        c == '}' ||
+                        c == '[' ||
+                        c == ']'
+                    ) {
                         t = this.handle_group_block(c)
                         if (t) {
                             return t
@@ -412,6 +419,10 @@ class Lexer {
             t = TokenType.LeftBrace
         } else if (c == '}') {
             t = TokenType.RightBrace
+        } else if (c == '[') {
+            t = TokenType.LeftBracket
+        } else if (c == ']') {
+            t = TokenType.RightBracket
         } else {
             t = TokenType.Void
         }

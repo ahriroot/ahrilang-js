@@ -52,6 +52,8 @@ enum TokenType {
     RightParen, // )
     LeftBrace, // {
     RightBrace, // }
+    LeftBracket, // [
+    RightBracket, // ]
     Assign, // =
     Dot, // .
 
@@ -108,7 +110,9 @@ class Token {
             case TokenType.Void:
                 return `<Void: ${this.content}>`
             case TokenType.Keyword:
-                return `<Keyword: ${this.content} ${this.metadata.area.toString()}>`
+                return `<Keyword: ${
+                    this.content
+                } ${this.metadata.area.toString()}>`
             case TokenType.Identifier:
                 return `<Identifier: ${this.content}>`
             case TokenType.Integer:
@@ -161,6 +165,10 @@ class Token {
                 return `<LeftBrace>`
             case TokenType.RightBrace:
                 return `<RightBrace>`
+            case TokenType.LeftBracket:
+                return `<LeftBracket>`
+            case TokenType.RightBracket:
+                return `<RightBracket>`
             case TokenType.Assign:
                 return `<Assign>`
             case TokenType.Dot:
