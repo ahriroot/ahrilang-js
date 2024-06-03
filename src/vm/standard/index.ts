@@ -3,9 +3,9 @@ import { ErrorBase } from '../../error'
 import {
     ObjectArray,
     ObjectBase,
+    ObjectFuture,
     ObjectInstructions,
     ObjectInteger,
-    ObjectNull,
     ObjectStd,
     ObjectString,
     StdFunction,
@@ -53,6 +53,17 @@ const time_sleep = (args: ObjectBase, _runtime?: Runtime) => {
     }
 }
 
+const async_time_sleep = (args: ObjectBase, _runtime?: Runtime): ObjectBase => {
+    let argument = args as ObjectArray
+    let baseObject = argument.value[0]
+    if (baseObject.type !== 'ObjectInteger') {
+        throw new ErrorBase('Invalid argument')
+    }
+    let timeObject = baseObject as ObjectInteger
+    let time = timeObject.value
+    return new ObjectFuture(new Promise((resolve) => setTimeout(resolve, time)))
+}
+
 const import_std = (args: ObjectBase, _runtime?: Runtime): ObjectBase => {
     let argument = args as ObjectArray
     let typeObject = argument.value[0] as ObjectString
@@ -66,6 +77,8 @@ const import_std = (args: ObjectBase, _runtime?: Runtime): ObjectBase => {
                 return new ObjectStd(new StdFunction(display))
             case 'a.time.sleep':
                 return new ObjectStd(new StdFunction(time_sleep))
+            case 'a.coroutine.sleep':
+                return new ObjectStd(new StdFunction(async_time_sleep))
             default:
                 throw new ErrorBase('Invalid import path')
         }

@@ -97,20 +97,7 @@ class AsyncFrame {
                     if (index in this.locals) {
                         this.stack.push(this.locals[index])
                     } else {
-                        if (args !== null) {
-                            let argus = (args as ObjectArray).value
-                            if (argus.length > index) {
-                                this.stack.push(argus[index])
-                            } else {
-                                return new ObjectError(
-                                    new ErrorRuntime('No argument'),
-                                )
-                            }
-                        } else {
-                            return new ObjectError(
-                                new ErrorRuntime('No argument'),
-                            )
-                        }
+                        return new ObjectError(new ErrorRuntime('No name'))
                     }
                     break
                 case InstType.LoadGlobal:
@@ -129,6 +116,11 @@ class AsyncFrame {
                     } else {
                         throw new ErrorRuntime('No argument')
                     }
+                    break
+                case InstType.StoreFast:
+                    let argums = (args as ObjectArray).value
+                    let obj = this.stack.pop() as ObjectBase
+                    argums[index] = obj
                     break
                 case InstType.BinaryAdd:
                     b = this.stack.pop() as ObjectBase
@@ -216,14 +208,8 @@ class AsyncFrame {
                         let std = (func as unknown as ObjectStd).value
                         if (std.type == 'StdFunction') {
                             let standard = std as StdFunction
-                            let res = standard.value(ars, this.runtime)
-                            if (res instanceof Promise) {
-                                this.stack.push(await res)
-                            } else {
-                                if (res) {
-                                    this.stack.push(res)
-                                }
-                            }
+                            let res = standard.value(ars, this.runtime) as ObjectBase
+                            this.stack.push(res)
                         } else {
                             throw new ErrorRuntime('Not implemented yet')
                         }

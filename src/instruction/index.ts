@@ -7,6 +7,7 @@ enum InstType {
     LoadGlobal,
     StoreGlobal,
     LoadFast,
+    StoreFast,
     BinaryAdd,
     BinarySub,
     BinaryMul,
@@ -24,6 +25,8 @@ enum InstType {
     JumpFalse,
     Pop,
     Return,
+    BuildList,
+    BuildMap,
 }
 
 class Instruction {
@@ -65,6 +68,8 @@ class Instruction {
                 return `StoreGlobal(${this.index})`
             case InstType.LoadFast:
                 return `LoadFast(${this.index})`
+            case InstType.StoreFast:
+                return `StoreFast(${this.index})`
             case InstType.BinaryAdd:
                 return 'BinaryAdd'
             case InstType.BinarySub:
@@ -99,6 +104,10 @@ class Instruction {
                 return 'Pop'
             case InstType.Return:
                 return 'Return'
+            case InstType.BuildList:
+                return `BuildList(${this.index})`
+            case InstType.BuildMap:
+                return `BuildMap(${this.index})`
         }
     }
 

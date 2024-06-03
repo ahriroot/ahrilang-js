@@ -40,14 +40,16 @@ class Compiler {
     instructions: Instruction[]
     consts: ObjectBase[]
     names: ObjectBase[]
+    args: ObjectBase[]
     globals: ObjectBase[]
     break_index: number[][]
     continue_index: number[][]
 
-    constructor(names: ObjectBase[], globals: ObjectBase[]) {
+    constructor(args: ObjectBase[], globals: ObjectBase[]) {
         this.instructions = []
         this.consts = []
-        this.names = names
+        this.names = []
+        this.args = args
         this.globals = globals
         this.break_index = []
         this.continue_index = []
@@ -58,16 +60,22 @@ class Compiler {
         return this.consts.length - 1
     }
 
-    make_name(obj: ObjectBase): number {
+    make_name(obj: ObjectBase): [number, number] {
         let object = obj as ObjectString
         for (let i = 0; i < this.names.length; i++) {
             let name = this.names[i] as ObjectString
             if (name.value == object.value) {
-                return i
+                return [i, 0]
+            }
+        }
+        for (let i = 0; i < this.args.length; i++) {
+            let name = this.args[i] as ObjectString
+            if (name.value == object.value) {
+                return [i, 1]
             }
         }
         this.names.push(obj)
-        return this.names.length - 1
+        return [this.names.length - 1, 0]
     }
 
     make_instruction(instruction: Instruction): number {
@@ -153,8 +161,16 @@ class Compiler {
         )
         this.make_instruction(new Instruction(InstType.LoadConst, index))
         this.make_instruction(new Instruction(InstType.Use, 1))
-        let index_name = this.make_name(new ObjectString(token.content))
-        this.make_instruction(new Instruction(InstType.StoreName, index_name))
+        let [index_name, t] = this.make_name(new ObjectString(token.content))
+        if (t == 0) {
+            this.make_instruction(
+                new Instruction(InstType.StoreName, index_name),
+            )
+        } else {
+            this.make_instruction(
+                new Instruction(InstType.StoreFast, index_name),
+            )
+        }
     }
 
     compile_async_function(node: AsyncFunction) {
@@ -177,10 +193,18 @@ class Compiler {
         let index_inst = this.make_const(new ObjectInstructions(instructions))
         this.make_instruction(new Instruction(InstType.LoadConst, index_inst))
         this.make_instruction(new Instruction(InstType.MakeAsyncFunction, 0))
-        let index_name_func = this.make_name(new ObjectString(token.content))
-        this.make_instruction(
-            new Instruction(InstType.StoreName, index_name_func),
+        let [index_name_func, t] = this.make_name(
+            new ObjectString(token.content),
         )
+        if (t == 0) {
+            this.make_instruction(
+                new Instruction(InstType.StoreName, index_name_func),
+            )
+        } else {
+            this.make_instruction(
+                new Instruction(InstType.StoreFast, index_name_func),
+            )
+        }
     }
 
     compile_function(node: Function) {
@@ -203,10 +227,18 @@ class Compiler {
         let index_inst = this.make_const(new ObjectInstructions(instructions))
         this.make_instruction(new Instruction(InstType.LoadConst, index_inst))
         this.make_instruction(new Instruction(InstType.MakeFunction, 0))
-        let index_name_func = this.make_name(new ObjectString(token.content))
-        this.make_instruction(
-            new Instruction(InstType.StoreName, index_name_func),
+        let [index_name_func, t] = this.make_name(
+            new ObjectString(token.content),
         )
+        if (t == 0) {
+            this.make_instruction(
+                new Instruction(InstType.StoreName, index_name_func),
+            )
+        } else {
+            this.make_instruction(
+                new Instruction(InstType.StoreFast, index_name_func),
+            )
+        }
     }
 
     compile_return(node: Return) {
@@ -293,6 +325,7 @@ class Compiler {
         if (index >= 0) {
             this.make_instruction(new Instruction(InstType.LoadName, index))
             this.make_instruction(new Instruction(InstType.CallFunction, count))
+            this.make_instruction(new Instruction(InstType.Await))
         } else {
             let index_global = this.globals.findIndex(
                 (item) => (item as ObjectString).value === token.content,
@@ -360,8 +393,12 @@ class Compiler {
 
     compile_identifier(node: Identifier) {
         let token = node.token
-        let index = this.make_name(new ObjectString(token.content))
-        this.make_instruction(new Instruction(InstType.LoadName, index))
+        let [index, t] = this.make_name(new ObjectString(token.content))
+        if (t == 0) {
+            this.make_instruction(new Instruction(InstType.LoadName, index))
+        } else {
+            this.make_instruction(new Instruction(InstType.LoadFast, index))
+        }
     }
 
     compile_infix(node: Infix) {
@@ -396,12 +433,18 @@ class Compiler {
                 break
             case TokenType.Assign:
                 this.compile(right)
-                let index = this.make_name(
+                let [index, t] = this.make_name(
                     new ObjectString((left as Identifier).token.content),
                 )
-                this.make_instruction(
-                    new Instruction(InstType.StoreName, index),
-                )
+                if (t == 0) {
+                    this.make_instruction(
+                        new Instruction(InstType.StoreName, index),
+                    )
+                } else {
+                    this.make_instruction(
+                        new Instruction(InstType.StoreFast, index),
+                    )
+                }
                 break
             case TokenType.Equal:
                 this.compile(left)

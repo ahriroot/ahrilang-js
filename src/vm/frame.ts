@@ -96,14 +96,7 @@ class Frame {
                     if (index in this.locals) {
                         this.stack.push(this.locals[index])
                     } else {
-                        let argus = (args as ObjectArray).value
-                        if (argus.length > index) {
-                            this.stack.push(argus[index])
-                        } else {
-                            return new ObjectError(
-                                new ErrorRuntime('No argument'),
-                            )
-                        }
+                        return new ObjectError(new ErrorRuntime('No argument'))
                     }
                     break
                 case InstType.LoadGlobal:
@@ -121,6 +114,13 @@ class Frame {
                         this.stack.push(argus[index])
                     } else {
                         throw new ErrorRuntime('No argument')
+                    }
+                    break
+                case InstType.LoadGlobal:
+                    if (index in this.global) {
+                        this.stack.push(this.global[index])
+                    } else {
+                        throw new ErrorRuntime('No global variable')
                     }
                     break
                 case InstType.BinaryAdd:

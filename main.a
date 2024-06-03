@@ -48,12 +48,13 @@ loop {
     break
 }
 
-a = 0
-
 use a.time.sleep as sl
+use a.coroutine.sleep
+
+a = 0
 
 while a < 10 {
     print(a)
-    sl(1000)
+    await sleep(1000)
     a = a + 1
 }
