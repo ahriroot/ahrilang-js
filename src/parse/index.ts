@@ -24,6 +24,7 @@ import {
     Break,
     List,
     Map,
+    Subscript,
 } from './ast'
 
 const PREFIX = [
@@ -164,6 +165,9 @@ class Parser {
                 let err = new Error('Invalid syntax')
                 this.save_error(err)
                 throw err
+        }
+        if (this.token.token_type == TokenType.LeftBracket) {
+            e = this.parse_subscript(e)
         }
         while (
             // @ts-ignore
@@ -553,6 +557,7 @@ class Parser {
         // @ts-ignore
         while (this.token.token_type != TokenType.RightBrace) {
             consequence.push(this.parse_expression(Precedence.Lowest))
+            this.skip()
         }
         this.next_token()
         return new Loop(consequence)
@@ -578,6 +583,7 @@ class Parser {
     }
 
     parse_continue(): Expression {
+        this.next_token()
         return new Continue()
     }
 
@@ -592,6 +598,20 @@ class Parser {
             e = this.parse_expression(Precedence.Lowest)
         }
         return new Break(e)
+    }
+
+    parse_subscript(e: Expression): Expression {
+        let expressions = []
+        this.next_token()
+        while (this.token.token_type != TokenType.RightBracket) {
+            if (this.token.token_type == TokenType.Colon) {
+                this.next_token()
+                continue
+            }
+            expressions.push(this.parse_expression(Precedence.Lowest))
+        }
+        this.next_token()
+        return new Subscript(e, expressions)
     }
 }
 
@@ -619,4 +639,5 @@ export {
     Break,
     List,
     Map,
+    Subscript,
 }

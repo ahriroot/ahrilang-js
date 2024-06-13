@@ -34,6 +34,7 @@ import {
     String,
     Use,
     While,
+    Subscript,
 } from '../parse'
 import { Lexer, TokenType } from '../token'
 import { AsyncFrame, Runtime } from '../vm'
@@ -157,6 +158,9 @@ class Compiler {
                 break
             case 'Map':
                 this.compile_map(node as Map)
+                break
+            case 'Subscript':
+                this.compile_subscript(node as Subscript)
                 break
         }
         return [this.consts, this.names, this.instructions]
@@ -400,16 +404,24 @@ class Compiler {
                 break
             case TokenType.Assign:
                 this.compile(right)
-                let [index, t] = this.make_name(
-                    new ObjectString((left as Identifier).token.content),
-                )
-                if (t == 0) {
-                    this.make_instruction(
-                        new Instruction(InstType.StoreName, index),
+                if (left.type == 'Identifier') {
+                    let [index, t] = this.make_name(
+                        new ObjectString((left as Identifier).token.content),
                     )
+                    if (t == 0) {
+                        this.make_instruction(
+                            new Instruction(InstType.StoreName, index),
+                        )
+                    } else {
+                        this.make_instruction(
+                            new Instruction(InstType.StoreFast, index),
+                        )
+                    }
                 } else {
+                    this.compile(left)
+                    this.instructions.pop()
                     this.make_instruction(
-                        new Instruction(InstType.StoreFast, index),
+                        new Instruction(InstType.StoreSubscript),
                     )
                 }
                 break
@@ -542,6 +554,17 @@ class Compiler {
         this.make_instruction(
             new Instruction(InstType.BuildMap, node.expressions.length / 2),
         )
+    }
+
+    compile_subscript(node: Subscript) {
+        this.compile(node.expression)
+        for (let e of node.expressions) {
+            this.compile(e)
+        }
+        this.make_instruction(
+            new Instruction(InstType.BuildSlice, node.expressions.length),
+        )
+        this.make_instruction(new Instruction(InstType.BinarySubscript))
     }
 
     static build(code: string): Uint8Array {

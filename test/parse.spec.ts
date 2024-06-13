@@ -4,18 +4,19 @@ import { Parser, Lexer } from '../src/lib'
 describe('Parser', () => {
     test('parser', () => {
         let code = `
-        use std.thread as t
-        async fn add(a, b) {
-            return a / b
-        }
-        join = thread(add, 1, 2)
-        res = join()
-        print(res)
-        
-        a = true
-        print(a)
+        a = 0
 
-        await add(1, 2)
+        loop {
+            a = a + 1
+
+            print(a)
+
+            if a < 10 {
+                continue
+            }
+            
+            break
+        }
         `
         let lexer = new Lexer(code)
         let parser = new Parser(lexer)

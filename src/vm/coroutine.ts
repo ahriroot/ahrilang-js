@@ -16,6 +16,7 @@ import {
     ObjectBoolean,
     ObjectError,
     ObjectFuture,
+    ObjectInteger,
     ObjectMap,
     ObjectNull,
 } from '../object'
@@ -281,6 +282,87 @@ class AsyncFrame {
                         map.set(key, value)
                     }
                     this.stack.push(new ObjectMap(map))
+                    break
+                case InstType.BuildSlice:
+                    let slice = []
+                    for (let i = 0; i < index; i++) {
+                        slice.unshift(this.stack.pop() as ObjectBase)
+                    }
+                    this.stack.push(new ObjectArray(slice))
+                    break
+                case InstType.BinarySubscript:
+                    b = this.stack.pop() as ObjectArray
+                    a = this.stack.pop() as ObjectBase
+                    if (b.value.length == 1) {
+                        let i
+                        switch (a.type) {
+                            case 'ObjectArray':
+                                i = (b.value[0] as ObjectInteger).value
+                                this.stack.push((a as ObjectArray).value[i])
+                                break
+                            case 'ObjectMap':
+                                i = b.value[0]
+                                this.stack.push((a as ObjectMap).get(i))
+                                break
+                            case 'ObjectString':
+                                i = (b.value[0] as ObjectInteger).value
+                                this.stack.push(
+                                    new ObjectString(
+                                        (a as ObjectString).value[i],
+                                    ),
+                                )
+                                break
+                            default:
+                                throw new ErrorRuntime('Not implemented yet')
+                        }
+                    } else if (b.value.length == 2) {
+                        let start = (b.value[0] as ObjectInteger).value
+                        let end = (b.value[1] as ObjectInteger).value
+                        switch (a.type) {
+                            case 'ObjectArray':
+                                this.stack.push(
+                                    new ObjectArray(
+                                        (a as ObjectArray).value.slice(
+                                            start,
+                                            end,
+                                        ),
+                                    ),
+                                )
+                                break
+                            case 'ObjectString':
+                                this.stack.push(
+                                    new ObjectString(
+                                        (a as ObjectString).value.slice(
+                                            start,
+                                            end,
+                                        ),
+                                    ),
+                                )
+                                break
+                            default:
+                                throw new ErrorRuntime('Not implemented yet')
+                        }
+                    }
+                    break
+                case InstType.StoreSubscript:
+                    b = this.stack.pop() as ObjectArray
+                    a = this.stack.pop() as ObjectBase
+
+                    switch (a.type) {
+                        case 'ObjectArray':
+                            ;(a as ObjectArray).value[
+                                (b.value[0] as ObjectInteger).value
+                            ] = this.stack.pop() as ObjectBase
+                            break
+                        case 'ObjectMap':
+                            ;(a as ObjectMap).set(
+                                b.value[0],
+                                this.stack.pop() as ObjectBase,
+                            )
+                            break
+                        default:
+                            throw new ErrorRuntime('Not implemented yet')
+                    }
                     break
             }
             point++

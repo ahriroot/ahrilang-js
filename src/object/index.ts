@@ -696,11 +696,17 @@ class ObjectArray extends ObjectBase {
 
 class ObjectMap extends ObjectBase {
     value: Map<ObjectBase, ObjectBase>
+    map: Map<symbol, ObjectBase>
     type = 'ObjectMap'
 
     constructor(value: Map<ObjectBase, ObjectBase>) {
         super()
-        this.value = value
+        this.value = new Map()
+        this.map = new Map()
+        for (let [k, v] of value) {
+            this.value.set(k, v)
+            this.map.set(k.hash(), k)
+        }
     }
 
     toString(): string {
@@ -712,11 +718,22 @@ class ObjectMap extends ObjectBase {
     }
 
     get(key: ObjectBase) {
-        return this.value.get(key)
+        let k = this.map.get(key.hash())
+        if (k == undefined) {
+            return undefined
+        }
+        return this.value.get(k)
     }
 
     set(key: ObjectBase, value: ObjectBase) {
-        this.value.set(key, value)
+        let h = key.hash()
+        let k = this.map.get(h)
+        if (k == undefined) {
+            this.map.set(h, key)
+            this.value.set(key, value)
+        } else {
+            this.value.set(k, value)
+        }
     }
 }
 

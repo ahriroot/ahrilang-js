@@ -27,6 +27,9 @@ enum InstType {
     Return,
     BuildList,
     BuildMap,
+    BuildSlice,
+    BinarySubscript,
+    StoreSubscript,
 }
 
 class Instruction {
@@ -108,6 +111,12 @@ class Instruction {
                 return `BuildList(${this.index})`
             case InstType.BuildMap:
                 return `BuildMap(${this.index})`
+            case InstType.BuildSlice:
+                return `BuildSlice(${this.index})`
+            case InstType.BinarySubscript:
+                return 'BinarySubscript'
+            case InstType.StoreSubscript:
+                return 'StoreSubscript'
         }
     }
 
