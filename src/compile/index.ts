@@ -76,6 +76,14 @@ class Compiler {
                 return [i, 1]
             }
         }
+        switch (object.value) {
+            case 'print':
+                return [0, 2]
+            case 'thread':
+                return [1, 2]
+            case 'coroutine':
+                return [2, 2]
+        }
         this.names.push(obj)
         return [this.names.length - 1, 0]
     }
@@ -250,72 +258,21 @@ class Compiler {
     }
 
     compile_return(node: Return) {
-        let expression = node.expression
+        let expression = node.expression as Expression
         this.compile(expression)
         this.make_instruction(new Instruction(InstType.Return))
     }
 
     compile_call(node: Call) {
-        let token = node.token
+        let name = node.name
         let args = node.expressions
 
         let count = args.length
         for (let i = 0; i < count; i++) {
             this.compile(args[i])
         }
-
-        let index = this.names.findIndex(
-            (item) => (item as ObjectString).value === token.content,
-        )
-        if (index >= 0) {
-            this.make_instruction(new Instruction(InstType.LoadName, index))
-            this.make_instruction(new Instruction(InstType.CallFunction, count))
-        } else {
-            let index_global = this.globals.findIndex(
-                (item) => (item as ObjectString).value === token.content,
-            )
-            if (index_global >= 0) {
-                this.make_instruction(
-                    new Instruction(InstType.LoadGlobal, index_global),
-                )
-                this.make_instruction(
-                    new Instruction(InstType.CallFunction, count),
-                )
-                this.make_instruction(new Instruction(InstType.Await))
-            } else {
-                switch (token.content) {
-                    case 'print':
-                        this.make_instruction(
-                            new Instruction(InstType.LoadStd, 0),
-                        )
-                        this.make_instruction(
-                            new Instruction(InstType.CallFunction, count),
-                        )
-                        this.make_instruction(new Instruction(InstType.Pop))
-                        break
-                    case 'thread':
-                        this.make_instruction(
-                            new Instruction(InstType.LoadStd, 1),
-                        )
-                        this.make_instruction(
-                            new Instruction(InstType.CallFunction, count),
-                        )
-                        break
-                    case 'coroutine':
-                        this.make_instruction(
-                            new Instruction(InstType.LoadStd, 2),
-                        )
-                        this.make_instruction(
-                            new Instruction(InstType.CallFunction, count),
-                        )
-                        break
-                    default:
-                        throw new ErrorRuntime(
-                            `Name not found: ${token.content}`,
-                        )
-                }
-            }
-        }
+        this.compile(name)
+        this.make_instruction(new Instruction(InstType.CallFunction, count))
     }
 
     compile_await(node: Await) {
@@ -404,8 +361,10 @@ class Compiler {
         let [index, t] = this.make_name(new ObjectString(token.content))
         if (t == 0) {
             this.make_instruction(new Instruction(InstType.LoadName, index))
-        } else {
+        } else if (t == 1) {
             this.make_instruction(new Instruction(InstType.LoadFast, index))
+        } else {
+            this.make_instruction(new Instruction(InstType.LoadStd, index))
         }
     }
 

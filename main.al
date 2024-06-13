@@ -42,7 +42,7 @@ a = 0
 loop {
     a = a + 1
     print(a)
-    if (a < 10) {
+    if a < 10 {
         continue
     }
     break

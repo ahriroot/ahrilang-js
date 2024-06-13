@@ -82,23 +82,23 @@ class Function extends Expression {
 }
 
 class Return extends Expression {
-    expression: Expression
+    expression: Expression | null
     type = 'Return'
 
-    constructor(expression: Expression) {
+    constructor(expression: Expression | null) {
         super()
         this.expression = expression
     }
 }
 
 class Call extends Expression {
-    token: Token
+    name: Expression
     expressions: Expression[]
     type = 'Call'
 
-    constructor(token: Token, expressions: Expression[]) {
+    constructor(name: Expression, expressions: Expression[]) {
         super()
-        this.token = token
+        this.name = name
         this.expressions = expressions
     }
 }
@@ -261,6 +261,18 @@ class Map extends Expression {
     }
 }
 
+class Subscript extends Expression {
+    expression: Expression
+    expressions: Expression[]
+    type = 'Subscript'
+
+    constructor(expression: Expression, expressions: Expression[]) {
+        super()
+        this.expression = expression
+        this.expressions = expressions
+    }
+}
+
 export {
     Expression,
     Program,
@@ -284,4 +296,5 @@ export {
     Break,
     List,
     Map,
+    Subscript,
 }

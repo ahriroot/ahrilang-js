@@ -123,7 +123,15 @@ class Lexer {
                     }
                     break
                 default:
-                    if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
+                    if (c == '#') {
+                        t = this.handle_identifier(c)
+                        if (t) {
+                            return t
+                        }
+                    } else if (
+                        (c >= 'a' && c <= 'z') ||
+                        (c >= 'A' && c <= 'Z')
+                    ) {
                         t = this.handle_identifier(c)
                         if (t) {
                             return t

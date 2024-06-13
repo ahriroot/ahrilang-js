@@ -213,6 +213,9 @@ class AsyncFrame {
                                 ars,
                                 this.runtime,
                             ) as ObjectBase
+                            if (res instanceof Promise) {
+                                res = await res
+                            }
                             this.stack.push(res)
                         } else {
                             throw new ErrorRuntime('Not implemented yet')

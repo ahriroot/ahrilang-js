@@ -77,6 +77,16 @@ class Parser {
         this.errors.push(error)
     }
 
+    skip() {
+        while (
+            this.token.token_type == TokenType.Next ||
+            this.token.token_type == TokenType.SlComment ||
+            this.token.token_type == TokenType.MlComment
+        ) {
+            this.next_token()
+        }
+    }
+
     expect_next(token_type: TokenType) {
         if (this.next.token_type == token_type) {
             this.next_token()
@@ -95,7 +105,6 @@ class Parser {
         let stmts: Expression[] = []
         while (this.token.token_type != TokenType.Eof) {
             stmts.push(this.parse_statement())
-            this.next_token()
         }
         return new Program(stmts)
     }
@@ -106,26 +115,14 @@ class Parser {
 
     parse_expression_statement(): Expression {
         let expression = this.parse_expression(Precedence.Lowest)
-        while (
-            this.next.token_type == TokenType.Next ||
-            this.next.token_type == TokenType.SlComment ||
-            this.next.token_type == TokenType.MlComment
-        ) {
-            this.next_token()
-        }
+        this.skip()
         return new Statement(expression)
     }
 
     parse_expression(precedence: Precedence): Expression {
-        while (
-            this.token.token_type == TokenType.Next ||
-            this.token.token_type == TokenType.SlComment ||
-            this.token.token_type == TokenType.MlComment
-        ) {
-            this.next_token()
-        }
+        this.skip()
         if (!PREFIX.includes(this.token.token_type)) {
-            let info = `Invalid syntax, unexpected expression: [line: {${this.token.metadata.area.start[0]}}, column: {${this.token.metadata.area.start[1]}}]`
+            let info = `Invalid syntax, unexpected expression: [${this.token.content}] [line: {${this.token.metadata.area.start[0]}}, column: {${this.token.metadata.area.start[1]}}]`
             let err = new ErrorSyntax(info)
             this.save_error(err)
             throw err
@@ -155,10 +152,12 @@ class Parser {
                 e = this.parse_boolean()
                 break
             case TokenType.Identifier:
-                if (this.next.token_type == TokenType.LeftParen) {
-                    e = this.parse_call()
+                let id = this.parse_identifier()
+                // @ts-ignore
+                if (this.token.token_type == TokenType.LeftParen) {
+                    e = this.parse_call(id)
                 } else {
-                    e = this.parse_identifier()
+                    e = id
                 }
                 break
             default:
@@ -167,57 +166,67 @@ class Parser {
                 throw err
         }
         while (
-            this.next.token_type != TokenType.Next &&
-            precedence < this.next.metadata.precedence
+            // @ts-ignore
+            this.token.token_type != TokenType.Next &&
+            precedence < this.token.metadata.precedence
         ) {
-            if (!INFIX.includes(this.next.token_type)) {
+            if (!INFIX.includes(this.token.token_type)) {
                 return e
             }
-            this.next_token()
             e = this.parse_infix(e)
         }
+        this.skip()
         return e
     }
 
     parse_integer(): Expression {
-        return new Integer(parseInt(this.token.content))
+        let content = this.token.content
+        content = content.replace(/_/g, '')
+        this.next_token()
+        return new Integer(parseInt(content))
     }
 
     parse_group(): Expression {
         this.next_token()
         let e = this.parse_expression(Precedence.Lowest)
-        this.expect_next(TokenType.RightParen)
+        this.next_token()
+        if (this.token.token_type != TokenType.RightParen) {
+            let info = `Invalid syntax, unexpected token: [line: {${this.token.metadata.area.start[0]}}, column: {${this.token.metadata.area.start[1]}}]`
+            let err = new ErrorSyntax(info)
+            this.save_error(err)
+            throw err
+        }
         return e
     }
 
     parse_list(): Expression {
         let body = []
-        while (true) {
-            this.next_token()
+        this.next_token()
+        while (this.token.token_type != TokenType.RightBracket) {
             if (this.token.token_type == TokenType.Comma) {
+                this.next_token()
                 continue
-            } else if (this.token.token_type == TokenType.RightBracket) {
-                break
             }
-            body.push(this.parse_statement())
+            body.push(this.parse_expression(Precedence.Lowest))
         }
+        this.next_token()
         return new List(body)
     }
 
     parse_map(): Expression {
         let body = []
-        while (true) {
-            this.next_token()
+        this.next_token()
+        while (this.token.token_type != TokenType.RightBrace) {
             if (
                 this.token.token_type == TokenType.Comma ||
                 this.token.token_type == TokenType.Colon
             ) {
+                this.next_token()
                 continue
-            } else if (this.token.token_type == TokenType.RightBrace) {
-                break
             }
-            body.push(this.parse_statement())
+            body.push(this.parse_expression(Precedence.Lowest))
         }
+        this.next_token()
         return new Map(body)
     }
 
@@ -298,32 +307,39 @@ class Parser {
     }
 
     parse_return(): Expression {
+        let e = null
         this.next_token()
-        let e = this.parse_expression(Precedence.Lowest)
+        if (
+            this.token.token_type != TokenType.Next &&
+            this.token.token_type != TokenType.RightBrace
+        ) {
+            e = this.parse_expression(Precedence.Lowest)
+        }
         return new Return(e)
     }
 
     parse_async_function(): Expression {
         this.next_token()
-        this.expect_next(TokenType.Identifier)
+        this.next_token()
+
+        if (this.token.token_type != TokenType.Identifier) {
+            let err = new ErrorSyntax(
+                `Invalid syntax ${this.token.metadata.area}`,
+            )
+            this.save_error(err)
+            throw err
+        }
 
         let token = this.token
         this.next_token()
+        // @ts-ignore
         if (this.token.token_type != TokenType.LeftParen) {
             throw new ErrorSyntax(`Invalid syntax ${this.token.metadata.area}`)
         }
         this.next_token()
         let args = []
         let annotation = []
-        while (true) {
-            // @ts-ignore
-            if (this.token.token_type != TokenType.Identifier) {
-                throw new ErrorSyntax(
-                    `Invalid syntax ${this.token.metadata.area}`,
-                )
-            }
-            args.push(this.token)
-            this.next_token()
+        while (this.token.token_type != TokenType.RightParen) {
             if (this.token.token_type == TokenType.Colon) {
                 this.next_token()
                 annotation.push(this.next)
@@ -331,12 +347,9 @@ class Parser {
             } else if (this.token.token_type == TokenType.Comma) {
                 this.next_token()
                 continue
-            } else if (this.token.token_type == TokenType.RightParen) {
-                break
             } else {
-                throw new ErrorSyntax(
-                    `Invalid syntax ${this.token.metadata.area}`,
-                )
+                args.push(this.token)
+                this.next_token()
             }
         }
 
@@ -347,39 +360,31 @@ class Parser {
         this.next_token()
 
         let body = []
-        while (true) {
-            if (this.token.token_type == TokenType.RightBrace) {
-                break
-            }
-            if (this.token.token_type == TokenType.Next) {
-                this.next_token()
-                continue
-            }
-            body.push(this.parse_statement())
+        while (this.token.token_type != TokenType.RightBrace) {
+            body.push(this.parse_expression(Precedence.Lowest))
+            this.skip()
         }
+        this.next_token()
 
         return new AsyncFunction(token, args, annotation, body)
     }
     parse_function(): Expression {
-        this.expect_next(TokenType.Identifier)
+        this.next_token()
+
+        if (this.token.token_type != TokenType.Identifier) {
+            throw new ErrorSyntax(`Invalid syntax ${this.token.metadata.area}`)
+        }
 
         let token = this.token
         this.next_token()
+        // @ts-ignore
         if (this.token.token_type != TokenType.LeftParen) {
             throw new ErrorSyntax(`Invalid syntax ${this.token.metadata.area}`)
         }
         this.next_token()
         let args = []
         let annotation = []
-        while (true) {
-            // @ts-ignore
-            if (this.token.token_type != TokenType.Identifier) {
-                throw new ErrorSyntax(
-                    `Invalid syntax ${this.token.metadata.area}`,
-                )
-            }
-            args.push(this.token)
-            this.next_token()
+        while (this.token.token_type != TokenType.RightParen) {
             if (this.token.token_type == TokenType.Colon) {
                 this.next_token()
                 annotation.push(this.next)
@@ -387,12 +392,9 @@ class Parser {
             } else if (this.token.token_type == TokenType.Comma) {
                 this.next_token()
                 continue
-            } else if (this.token.token_type == TokenType.RightParen) {
-                break
             } else {
-                throw new ErrorSyntax(
-                    `Invalid syntax ${this.token.metadata.area}`,
-                )
+                args.push(this.token)
+                this.next_token()
             }
         }
 
@@ -403,16 +405,11 @@ class Parser {
         this.next_token()
 
         let body = []
-        while (true) {
-            if (this.token.token_type == TokenType.RightBrace) {
-                break
-            }
-            if (this.token.token_type == TokenType.Next) {
-                this.next_token()
-                continue
-            }
-            body.push(this.parse_statement())
+        while (this.token.token_type != TokenType.RightBrace) {
+            body.push(this.parse_expression(Precedence.Lowest))
+            this.skip()
         }
+        this.next_token()
 
         return new Function(token, args, annotation, body)
     }
@@ -427,44 +424,44 @@ class Parser {
         }
         this.next_token()
         let args = []
-        while (true) {
-            // @ts-ignore
-            if (this.token.token_type == TokenType.RightParen) {
-                break
-            }
+        // @ts-ignore
+        while (this.token.token_type != TokenType.RightParen) {
             // @ts-ignore
             if (this.token.token_type == TokenType.Comma) {
                 this.next_token()
                 continue
             }
             args.push(this.parse_expression(Precedence.Lowest))
-            this.next_token()
         }
         this.next_token()
         return new Await(token, args)
     }
 
     parse_string(): Expression {
-        return new String(this.token, this.token.content)
+        let t = this.token
+        this.next_token()
+        return new String(t, t.content)
     }
 
     parse_boolean(): Expression {
-        return new Boolean(this.token, this.token.content == 'true')
+        let t = this.token
+        let v = t.content == 'true'
+        this.next_token()
+        return new Boolean(t, v)
     }
 
-    parse_call(): Expression {
-        let token = this.token
-        this.next_token()
+    parse_call(name: Expression): Expression {
         if (this.token.token_type != TokenType.LeftParen) {
             throw new ErrorSyntax(`Invalid syntax ${this.token.metadata.area}`)
         }
         this.next_token()
         let args = []
-        while (true) {
+        while (
             // @ts-ignore
-            if (this.token.token_type == TokenType.RightParen) {
-                break
-            }
+            this.token.token_type != TokenType.RightParen &&
+            // @ts-ignore
+            this.token.token_type != TokenType.Eof
+        ) {
             // @ts-ignore
             if (this.token.token_type == TokenType.Comma) {
                 this.next_token()
@@ -472,13 +469,15 @@ class Parser {
             }
             let e = this.parse_expression(Precedence.Lowest)
             args.push(e)
-            this.next_token()
         }
-        return new Call(token, args)
+        this.next_token()
+        return new Call(name, args)
     }
 
     parse_identifier(): Expression {
-        return new Identifier(this.token)
+        let t = this.token
+        this.next_token()
+        return new Identifier(t)
     }
 
     parse_infix(left: Expression): Expression {
@@ -492,11 +491,7 @@ class Parser {
     parse_if(): Expression {
         this.next_token()
         let condition = this.parse_expression(Precedence.Lowest)
-        this.next_token()
-
-        while (this.token.token_type == TokenType.Next) {
-            this.next_token()
-        }
+        this.skip()
 
         if (this.token.token_type == TokenType.LeftBrace) {
             this.next_token()
@@ -509,8 +504,7 @@ class Parser {
         let consequence = []
         // @ts-ignore
         while (this.token.token_type != TokenType.RightBrace) {
-            consequence.push(this.parse_statement())
-            this.next_token()
+            consequence.push(this.parse_expression(Precedence.Lowest))
         }
         this.next_token()
 
@@ -537,8 +531,7 @@ class Parser {
                     )
                 }
                 while (this.token.token_type != TokenType.RightBrace) {
-                    alternative.push(this.parse_statement())
-                    this.next_token()
+                    alternative.push(this.parse_expression(Precedence.Lowest))
                 }
                 this.next_token()
             }
@@ -549,9 +542,7 @@ class Parser {
     parse_loop(): Expression {
         this.next_token()
 
-        while (this.token.token_type == TokenType.Next) {
-            this.next_token()
-        }
+        this.skip()
 
         if (this.token.token_type != TokenType.LeftBrace) {
             throw new ErrorSyntax(`Invalid syntax ${this.token.metadata.area}`)
@@ -561,8 +552,7 @@ class Parser {
         let consequence = []
         // @ts-ignore
         while (this.token.token_type != TokenType.RightBrace) {
-            consequence.push(this.parse_statement())
-            this.next_token()
+            consequence.push(this.parse_expression(Precedence.Lowest))
         }
         this.next_token()
         return new Loop(consequence)
@@ -571,11 +561,7 @@ class Parser {
     parse_while(): Expression {
         this.next_token()
         let condition = this.parse_expression(Precedence.Lowest)
-        this.next_token()
-
-        while (this.token.token_type == TokenType.Next) {
-            this.next_token()
-        }
+        this.skip()
 
         if (this.token.token_type != TokenType.LeftBrace) {
             throw new ErrorSyntax(`Invalid syntax ${this.token.metadata.area}`)
@@ -585,8 +571,7 @@ class Parser {
         let consequence = []
         // @ts-ignore
         while (this.token.token_type != TokenType.RightBrace) {
-            consequence.push(this.parse_statement())
-            this.next_token()
+            consequence.push(this.parse_expression(Precedence.Lowest))
         }
         this.next_token()
         return new While(condition, consequence)
